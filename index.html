@@ -1,1022 +1,214 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anniversary Celebration — Registration</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<style>
-  :root{
-    --ink:#24231F;
-    --ink-soft:#57544C;
-    --cream:#F6F1E6;
-    --cream-2:#EFE7D6;
-    --pine:#1F3A34;
-    --pine-light:#2C4F47;
-    --brass:#B8863B;
-    --brass-light:#D9B876;
-    --burgundy:#7A2E2E;
-    --line:rgba(36,35,31,0.14);
-    --line-dark:rgba(246,241,230,0.18);
-    --danger:#9C3B32;
-    --radius:10px;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--cream);
-    color:var(--ink);
-    font-family:'Work Sans', sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .voice{font-family:'Fraunces', serif;}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px;}
+/**
+ * Anniversary Registration — Google Sheets backend
+ * Paste this entire file into Extensions > Apps Script for your Sheet,
+ * then deploy as a Web App (Execute as: Me, Who has access: Anyone).
+ */
 
-  /* HERO */
-  .hero{
-    background:var(--pine);
-    color:var(--cream);
-    padding:56px 24px 64px;
-    position:relative;
-    overflow:hidden;
-  }
-  .hero-inner{max-width:1080px;margin:0 auto;display:flex;align-items:flex-end;gap:40px;flex-wrap:wrap;}
-  .hero-number{
-    font-family:'Fraunces', serif;
-    font-weight:500;
-    font-size:clamp(88px,14vw,168px);
-    line-height:0.85;
-    color:var(--brass-light);
-    letter-spacing:-0.02em;
-  }
-  .hero-text{flex:1;min-width:260px;padding-bottom:8px;}
-  .hero-eyebrow{
-    font-size:15px;
-    color:var(--brass-light);
-    margin:0 0 10px;
-  }
-  .hero-title{
-    font-family:'Fraunces', serif;
-    font-weight:500;
-    font-size:clamp(28px,4vw,42px);
-    line-height:1.15;
-    margin:0 0 14px;
-    max-width:520px;
-  }
-  .hero-meta{
-    display:flex;
-    gap:28px;
-    flex-wrap:wrap;
-    font-size:15px;
-    color:var(--cream);
-    opacity:0.92;
-  }
-  .hero-meta div{display:flex; align-items:baseline; gap:8px;}
-  .hero-meta span.label{color:var(--brass-light); font-size:13px;}
-  .staff-link{
-    position:absolute;
-    top:24px;
-    right:24px;
-    background:transparent;
-    border:1px solid var(--line-dark);
-    color:var(--cream);
-    font-family:'Work Sans',sans-serif;
-    font-size:13px;
-    padding:8px 16px;
-    border-radius:100px;
-    cursor:pointer;
-  }
-  .staff-link:hover{background:rgba(246,241,230,0.08);}
+const REG_SHEET_NAME = 'Registrations';
+const CONFIG_SHEET_NAME = 'Config';
 
-  /* SHARE STRIP */
-  .share-strip{
-    background:var(--cream-2);
-    border-radius:14px;
-    padding:22px 26px;
-    margin-top:32px;
-    display:flex;
-    align-items:center;
-    gap:24px;
-    flex-wrap:wrap;
-    justify-content:space-between;
-  }
-  .share-text{flex:1; min-width:240px;}
-  .share-text p.title{font-family:'Fraunces', serif; font-size:17px; margin:0 0 4px;}
-  .share-text p.sub{font-size:13px; color:var(--ink-soft); margin:0 0 14px;}
-  .share-link-row{display:flex; gap:8px; max-width:440px;}
-  .share-link-row input{
-    flex:1; padding:9px 12px; border-radius:var(--radius); border:1px solid var(--line);
-    background:#fff; font-size:13px; color:var(--ink-soft); font-family:'Work Sans',sans-serif;
-  }
-  .share-qr{
-    background:#fff; padding:10px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-    width:112px; height:112px; flex-shrink:0;
-  }
-  .share-qr img, .share-qr canvas, .share-qr table{width:88px !important; height:88px !important;}
-
-  /* MAIN GRID */
-  .main-grid{
-    display:grid;
-    grid-template-columns:1.1fr 0.9fr;
-    gap:40px;
-    margin-top:48px;
-    align-items:start;
-  }
-  @media (max-width:800px){ .main-grid{grid-template-columns:1fr;} }
-
-  .panel-title{
-    font-family:'Fraunces', serif;
-    font-weight:500;
-    font-size:22px;
-    margin:0 0 6px;
-  }
-  .panel-sub{color:var(--ink-soft); font-size:14px; margin:0 0 24px;}
-
-  .field{margin-bottom:16px;}
-  .field label{
-    display:block;
-    font-size:13px;
-    color:var(--ink-soft);
-    margin-bottom:6px;
-  }
-  .field input, .field textarea, .field select{
-    width:100%;
-    padding:11px 13px;
-    border-radius:var(--radius);
-    border:1px solid var(--line);
-    background:#fff;
-    font-family:'Work Sans', sans-serif;
-    font-size:15px;
-    color:var(--ink);
-  }
-  .field input:focus, .field textarea:focus, .field select:focus{
-    outline:none;
-    border-color:var(--pine-light);
-    box-shadow:0 0 0 3px rgba(31,58,52,0.12);
-  }
-  .field-row{display:flex; gap:14px;}
-  .field-row .field{flex:1;}
-  .error-text{color:var(--danger); font-size:13px; margin-top:6px; display:none;}
-  .error-text.show{display:block;}
-
-  /* RELATIVES */
-  .relatives-block{margin-bottom:20px;}
-  .relatives-label{font-size:13px; color:var(--ink-soft); margin-bottom:8px; display:block;}
-  .relative-row{display:flex; gap:8px; margin-bottom:8px;}
-  .relative-row input{flex:1;}
-  .relative-remove{
-    background:transparent; border:1px solid var(--line); border-radius:var(--radius);
-    color:var(--ink-soft); width:38px; cursor:pointer; font-size:16px; flex-shrink:0;
-  }
-  .relative-remove:hover{background:var(--cream-2);}
-  .add-relative-btn{
-    background:transparent; border:1px dashed var(--line); border-radius:var(--radius);
-    color:var(--pine); padding:9px 14px; font-size:13px; cursor:pointer; width:100%;
-    font-family:'Work Sans',sans-serif;
-  }
-  .add-relative-btn:hover{background:var(--cream-2);}
-  .party-count{font-size:13px; color:var(--ink-soft); margin:10px 0 0;}
-
-  .btn-primary{
-    width:100%;
-    background:var(--pine);
-    color:var(--cream);
-    border:none;
-    padding:14px 20px;
-    border-radius:var(--radius);
-    font-family:'Work Sans', sans-serif;
-    font-size:15px;
-    font-weight:600;
-    cursor:pointer;
-    margin-top:8px;
-  }
-  .btn-primary:hover{background:var(--pine-light);}
-  .btn-secondary{
-    background:transparent;
-    color:var(--ink);
-    border:1px solid var(--line);
-    padding:10px 18px;
-    border-radius:var(--radius);
-    font-family:'Work Sans', sans-serif;
-    font-size:14px;
-    cursor:pointer;
-  }
-  .btn-secondary:hover{background:var(--cream-2);}
-  .btn-danger{
-    background:transparent;
-    color:var(--danger);
-    border:1px solid var(--danger);
-    padding:9px 16px;
-    border-radius:var(--radius);
-    font-size:13px;
-    cursor:pointer;
-  }
-
-  /* TICKET */
-  .ticket-shell{position:sticky; top:24px;}
-  .ticket{
-    background:var(--pine);
-    color:var(--cream);
-    border-radius:16px;
-    overflow:hidden;
-    box-shadow:0 12px 32px rgba(31,58,52,0.22);
-  }
-  .ticket-top{padding:26px 26px 18px;}
-  .ticket-event{font-size:13px; color:var(--brass-light); margin:0 0 4px;}
-  .ticket-name{
-    font-family:'Fraunces', serif;
-    font-weight:500;
-    font-size:24px;
-    margin:0 0 18px;
-    word-break:break-word;
-  }
-  .ticket-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 20px;}
-  .ticket-grid div span{display:block;}
-  .ticket-grid .k{font-size:11px; color:var(--brass-light); margin-bottom:3px;}
-  .ticket-grid .v{font-size:14px;}
-  .ticket-guests{margin-top:16px;}
-  .ticket-guests .k{font-size:11px; color:var(--brass-light); margin-bottom:4px; display:block;}
-  .ticket-guests .v{font-size:13px; line-height:1.6;}
-  .perforation{
-    position:relative;
-    height:0;
-    border-top:2px dashed rgba(246,241,230,0.28);
-    margin:6px 0 0;
-  }
-  .perforation::before, .perforation::after{
-    content:"";
-    position:absolute;
-    top:-11px;
-    width:22px;
-    height:22px;
-    background:var(--cream);
-    border-radius:50%;
-  }
-  .perforation::before{left:-11px;}
-  .perforation::after{right:-11px;}
-  .ticket-bottom{padding:20px 26px 26px; display:flex; align-items:center; justify-content:space-between; gap:16px;}
-  .ticket-code{font-family:'Fraunces', serif; font-size:19px; letter-spacing:0.03em;}
-  .ticket-code-label{font-size:11px; color:var(--brass-light); margin:0 0 3px;}
-  .ticket-qr{background:#fff; padding:6px; border-radius:8px; width:64px; height:64px; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
-  .ticket-qr img, .ticket-qr canvas, .ticket-qr table{width:52px !important; height:52px !important;}
-  .ticket-hint{font-size:12px; color:var(--ink-soft); margin-top:12px; text-align:center;}
-
-  .ticket-placeholder{
-    border:1px dashed var(--line);
-    border-radius:16px;
-    padding:40px 26px;
-    text-align:center;
-    color:var(--ink-soft);
-    font-size:14px;
-  }
-
-  .confirm-box{
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:16px 18px;
-    margin-top:16px;
-    font-size:14px;
-    color:var(--ink-soft);
-    display:none;
-  }
-  .confirm-box.show{display:block;}
-
-  /* LOOKUP */
-  .lookup-block{margin-top:40px; border-top:1px solid var(--line); padding-top:32px;}
-  .lookup-row{display:flex; gap:10px; max-width:420px;}
-  .lookup-row input{flex:1;}
-  .lookup-result{margin-top:16px;}
-
-  /* OVERLAY */
-  .overlay{
-    position:fixed; inset:0;
-    background:rgba(31,58,52,0.5);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:50;
-    padding:20px;
-  }
-  .overlay.show{display:flex;}
-  .overlay-card{
-    background:#fff;
-    border-radius:14px;
-    padding:28px;
-    max-width:360px;
-    width:100%;
-  }
-  .overlay-card h3{font-family:'Fraunces', serif; font-weight:500; margin:0 0 6px; font-size:19px;}
-  .overlay-card p{color:var(--ink-soft); font-size:14px; margin:0 0 18px;}
-  .overlay-actions{display:flex; gap:10px; margin-top:16px;}
-  .overlay-actions button{flex:1;}
-
-  /* ADMIN */
-  .admin-header{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-top:40px;}
-  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin:24px 0 32px;}
-  .stat-card{background:var(--cream-2); border-radius:var(--radius); padding:16px 18px;}
-  .stat-card .num{font-family:'Fraunces', serif; font-size:28px; font-weight:500;}
-  .stat-card .lbl{font-size:12px; color:var(--ink-soft); margin-top:2px;}
-
-  .checkin-bar{
-    display:flex; gap:10px; margin-bottom:20px; max-width:480px;
-  }
-  .checkin-bar input{flex:1;}
-  .checkin-feedback{font-size:13px; margin-top:8px; min-height:18px;}
-  .checkin-feedback.ok{color:var(--pine);}
-  .checkin-feedback.bad{color:var(--danger);}
-
-  table.reg-table{width:100%; border-collapse:collapse; font-size:14px; background:#fff; border-radius:var(--radius); overflow:hidden;}
-  table.reg-table th{
-    text-align:left;
-    font-size:12px;
-    color:var(--ink-soft);
-    font-weight:500;
-    padding:10px 12px;
-    border-bottom:1px solid var(--line);
-  }
-  table.reg-table td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
-  table.reg-table tr:last-child td{border-bottom:none;}
-  table.reg-table tr.highlight{background:#FBF3DD;}
-  .badge{
-    display:inline-block;
-    font-size:12px;
-    padding:3px 10px;
-    border-radius:100px;
-    background:var(--cream-2);
-    color:var(--ink-soft);
-  }
-  .badge.checked{background:#E4EEE8; color:var(--pine);}
-  .check-toggle{cursor:pointer; border:none; background:transparent; padding:0;}
-  .empty-state{
-    text-align:center;
-    padding:48px 20px;
-    color:var(--ink-soft);
-    background:var(--cream-2);
-    border-radius:var(--radius);
-    font-size:14px;
-  }
-  .config-form{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:32px;}
-  .config-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
-  @media (max-width:600px){ .config-grid{grid-template-columns:1fr;} }
-  .table-scroll{overflow-x:auto;}
-  .toast{
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:var(--ink); color:var(--cream);
-    padding:12px 20px; border-radius:100px; font-size:14px;
-    z-index:60; opacity:0; pointer-events:none; transition:opacity 0.2s;
-  }
-  .toast.show{opacity:1;}
-  .back-link{background:none;border:none;color:var(--ink-soft);font-size:14px;cursor:pointer;padding:0;margin-bottom:16px;text-decoration:underline;}
-</style>
-</head>
-<body>
-
-<div class="hero" id="hero">
-  <button class="staff-link" id="staffBtn" type="button">Staff</button>
-  <div class="hero-inner">
-    <div class="hero-number" id="heroNumber">24</div>
-    <div class="hero-text">
-      <p class="hero-eyebrow">You're invited to celebrate</p>
-      <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th anniversary</h1>
-      <div class="hero-meta">
-        <div><span class="label">Date</span> <span id="heroDate">Sunday, 04 October 2026</span></div>
-        <div><span class="label">Time</span> <span id="heroTime">2:00 PM</span></div>
-        <div><span class="label">Venue</span> <span id="heroVenue">42 Mactaggart Building, Mactaggart Road Unit #03-01 Singapore 368086</span></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="wrap">
-  <div class="share-strip">
-    <div class="share-text">
-      <p class="title voice">Share this page</p>
-      <p class="sub">Send the link or QR code to anyone you'd like to invite. Once open, they can reserve their own seat.</p>
-      <div class="share-link-row">
-        <input type="text" id="shareLinkInput" readonly>
-        <button class="btn-secondary" id="copyLinkBtn" type="button">Copy</button>
-      </div>
-    </div>
-    <div class="share-qr" id="shareQr"></div>
-  </div>
-
-  <div id="publicView">
-    <div class="main-grid">
-      <div>
-        <p class="panel-title voice">Reserve your seat</p>
-        <p class="panel-sub">Registration is free. Bring this ticket, printed or on your phone, to the welcome desk.</p>
-
-        <div class="field">
-          <label for="fName">Full name</label>
-          <input type="text" id="fName" placeholder="Ruth Adeyemi" autocomplete="name">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="fEmail">Email</label>
-            <input type="email" id="fEmail" placeholder="ruth@email.com" autocomplete="email">
-          </div>
-          <div class="field">
-            <label for="fPhone">Phone (optional)</label>
-            <input type="tel" id="fPhone" placeholder="+65 9123 4567" autocomplete="tel">
-          </div>
-        </div>
-
-        <div class="relatives-block">
-          <label class="relatives-label">Inviting family or friends? Add their names</label>
-          <div id="relativesList"></div>
-          <button class="add-relative-btn" id="addRelativeBtn" type="button">+ Invite a family member</button>
-          <p class="party-count" id="partyCount">Party size: 1 (just you)</p>
-        </div>
-
-        <div class="field">
-          <label for="fNotes">Anything we should know (optional)</label>
-          <textarea id="fNotes" rows="2" placeholder="Dietary needs, mobility assistance, seating with another family..."></textarea>
-        </div>
-        <div class="error-text" id="formError">Enter your name and email to reserve a seat.</div>
-        <button class="btn-primary" id="submitBtn" type="button">Reserve my seat</button>
-        <div class="confirm-box" id="confirmBox"></div>
-
-        <div class="lookup-block">
-          <p class="panel-title voice" style="font-size:18px;">Already registered?</p>
-          <p class="panel-sub" style="margin-bottom:14px;">Look up your ticket with the email you used.</p>
-          <div class="lookup-row">
-            <input type="email" id="lookupEmail" placeholder="ruth@email.com">
-            <button class="btn-secondary" id="lookupBtn" type="button">Find ticket</button>
-          </div>
-          <div class="lookup-result" id="lookupResult"></div>
-        </div>
-      </div>
-
-      <div class="ticket-shell">
-        <div id="ticketArea">
-          <div class="ticket-placeholder" id="ticketPlaceholder">Your ticket will appear here once you reserve a seat.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="adminView" style="display:none;">
-    <button class="back-link" id="exitAdminBtn" type="button">← Back to registration page</button>
-    <div class="admin-header">
-      <div>
-        <p class="panel-title voice" style="margin-bottom:2px;">Organizer dashboard</p>
-        <p class="panel-sub" style="margin:0;">Live view of everyone registered for the anniversary.</p>
-      </div>
-      <button class="btn-secondary" id="refreshBtn" type="button">Refresh</button>
-    </div>
-
-    <div class="stat-grid" id="statGrid"></div>
-
-    <details style="margin-bottom:28px;">
-      <summary style="cursor:pointer; font-size:14px; color:var(--ink-soft); margin-bottom:12px;">Event details & staff passcode</summary>
-      <div class="config-form">
-        <div class="config-grid">
-          <div class="field"><label>Church / organization name</label><input type="text" id="cfgChurch"></div>
-          <div class="field"><label>Anniversary number (e.g. 25)</label><input type="text" id="cfgNumber"></div>
-          <div class="field"><label>Date</label><input type="text" id="cfgDate"></div>
-          <div class="field"><label>Time</label><input type="text" id="cfgTime"></div>
-          <div class="field"><label>Venue</label><input type="text" id="cfgVenue"></div>
-          <div class="field"><label>Staff passcode</label><input type="text" id="cfgPasscode"></div>
-        </div>
-        <button class="btn-primary" id="saveCfgBtn" type="button" style="width:auto; padding:11px 22px;">Save event details</button>
-      </div>
-    </details>
-
-    <p class="panel-title voice" style="font-size:17px;">Check in a guest</p>
-    <p class="panel-sub" style="margin-bottom:14px;">Scan their ticket QR with any camera app, or type the code or name below.</p>
-    <div class="checkin-bar">
-      <input type="text" id="checkinInput" placeholder="Ticket code or name">
-      <button class="btn-secondary" id="checkinBtn" type="button">Find & check in</button>
-    </div>
-    <div class="checkin-feedback" id="checkinFeedback"></div>
-
-    <div class="table-scroll">
-      <div id="tableArea"></div>
-    </div>
-
-    <div style="margin-top:28px;">
-      <button class="btn-danger" id="clearAllBtn" type="button">Clear all registrations</button>
-    </div>
-  </div>
-</div>
-
-<div class="overlay" id="passOverlay">
-  <div class="overlay-card">
-    <h3 class="voice">Staff access</h3>
-    <p>Enter the staff passcode to view registrations and check people in.</p>
-    <div class="field"><input type="password" id="passInput" placeholder="Passcode"></div>
-    <div class="error-text" id="passError">That passcode isn't right.</div>
-    <div class="overlay-actions">
-      <button class="btn-secondary" id="cancelPassBtn" type="button">Cancel</button>
-      <button class="btn-primary" id="confirmPassBtn" type="button">Enter</button>
-    </div>
-  </div>
-</div>
-
-<div class="overlay" id="clearOverlay">
-  <div class="overlay-card">
-    <h3 class="voice">Clear all registrations?</h3>
-    <p>This removes every registration permanently. This can't be undone.</p>
-    <div class="overlay-actions">
-      <button class="btn-secondary" id="cancelClearBtn" type="button">Cancel</button>
-      <button class="btn-primary" id="confirmClearBtn" type="button" style="background:var(--danger);">Clear all</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
 const DEFAULT_CONFIG = {
-  church: "Jesus Christ To God Be The Glory Singapore Extension Church",
-  number: "24",
-  date: "Sunday, 04 October 2026",
-  time: "2:00 PM",
-  venue: "42 Mactaggart Building, Mactaggart Road Unit #03-01 Singapore 368086",
-  passcode: "anniversary2026"
+  church: 'Jesus Christ To God Be The Glory Singapore Extension Church',
+  number: '24',
+  date: 'Sunday, 04 October 2026',
+  time: '2:00 PM',
+  venue: '42 Mactaggart Building, Mactaggart Road Unit #03-01 Singapore 368086',
+  passcode: 'anniversary2026'
 };
 
-// Registrations are stored in a Google Sheet via this Apps Script Web App.
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxZkOdvWJhyQg_BrUXyqvr8o9Vl6rcbD9ErkK7OJIvBhbmeISPNImo2SCF8Uv43uAwO5A/exec';
-
-let config = { ...DEFAULT_CONFIG };
-let relativeRowCount = 0;
-
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+function getRegSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(REG_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(REG_SHEET_NAME);
+    sheet.appendRow(['code', 'name', 'email', 'phone', 'relatives', 'notes', 'checkedIn', 'registeredAt']);
+  }
+  return sheet;
 }
 
-function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
-
-async function apiGet(action, extraParams){
-  const params = new URLSearchParams({ action, ...(extraParams || {}) });
-  const res = await fetch(GAS_URL + '?' + params.toString());
-  if(!res.ok) throw new Error('Network error: ' + res.status);
-  const data = await res.json();
-  if(!data.ok) throw new Error(data.error || 'Request failed');
-  return data;
+function getConfigSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG_SHEET_NAME);
+    sheet.appendRow(['church', 'number', 'date', 'time', 'venue', 'passcode']);
+    // Force date/time columns to plain text so Sheets doesn't auto-convert
+    // strings like "Sunday, 04 October 2026" into real date serial values.
+    sheet.getRange(2, 3, 1, 2).setNumberFormat('@');
+    sheet.appendRow([
+      DEFAULT_CONFIG.church, DEFAULT_CONFIG.number, DEFAULT_CONFIG.date,
+      DEFAULT_CONFIG.time, DEFAULT_CONFIG.venue, DEFAULT_CONFIG.passcode
+    ]);
+  }
+  return sheet;
 }
 
-async function apiPost(action, payload){
-  // text/plain avoids a CORS preflight, which Apps Script web apps don't handle.
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, ...(payload || {}) })
-  });
-  if(!res.ok) throw new Error('Network error: ' + res.status);
-  const data = await res.json();
-  if(!data.ok) throw new Error(data.error || 'Request failed');
-  return data;
-}
-
-async function apiPostWithRetry(action, payload, attempts){
-  let lastError = null;
-  for(let i = 0; i < attempts; i++){
-    try{
-      return await apiPost(action, payload);
-    }catch(e){
-      lastError = e;
+function cellToText_(val, isTime) {
+  // Safety net: if a cell still holds a real Date/Time object instead of
+  // plain text, convert it back to a readable string. Google Sheets stores
+  // time-only values using a base date of Dec 30, 1899 — detect that and
+  // format as a clock time instead of a calendar date.
+  if (Object.prototype.toString.call(val) === '[object Date]') {
+    const tz = Session.getScriptTimeZone();
+    if (isTime || val.getFullYear() === 1899) {
+      return Utilities.formatDate(val, tz, 'h:mm a');
     }
-    if(i < attempts - 1) await sleep(600 * (i + 1));
+    return Utilities.formatDate(val, tz, "EEEE, dd MMMM yyyy");
   }
-  console.error('apiPostWithRetry exhausted attempts:', lastError);
-  throw lastError;
+  return val;
 }
 
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function ordinal(n){
-  const s = String(n);
-  if(s.endsWith('11') || s.endsWith('12') || s.endsWith('13')) return 'th';
-  if(s.endsWith('1')) return 'st';
-  if(s.endsWith('2')) return 'nd';
-  if(s.endsWith('3')) return 'rd';
-  return 'th';
-}
-
-async function loadConfig(){
-  try{
-    const data = await apiGet('config');
-    config = { ...DEFAULT_CONFIG, ...data.config };
-  }catch(e){
-    console.error('loadConfig failed:', e);
-    config = { ...DEFAULT_CONFIG };
-  }
-  applyConfigToHero();
-}
-
-function applyConfigToHero(){
-  document.getElementById('heroNumber').textContent = config.number;
-  document.getElementById('heroTitle').textContent = config.church + ' — ' + config.number + ordinal(config.number) + ' anniversary';
-  document.getElementById('heroDate').textContent = config.date;
-  document.getElementById('heroTime').textContent = config.time;
-  document.getElementById('heroVenue').textContent = config.venue;
-}
-
-function setupShareBox(){
-  const link = window.location.href;
-  document.getElementById('shareLinkInput').value = link;
-  const qrHolder = document.getElementById('shareQr');
-  qrHolder.innerHTML = '';
-  try{
-    new QRCode(qrHolder, { text: link, width: 88, height: 88, colorDark: '#1F3A34', colorLight: '#ffffff' });
-  }catch(e){}
-}
-
-document.getElementById('copyLinkBtn').addEventListener('click', async () => {
-  const val = document.getElementById('shareLinkInput').value;
-  try{
-    await navigator.clipboard.writeText(val);
-    showToast('Link copied');
-  }catch(e){
-    document.getElementById('shareLinkInput').select();
-    showToast('Select and copy the link above');
-  }
-});
-
-// RELATIVES
-function addRelativeRow(value){
-  relativeRowCount++;
-  const id = 'rel-' + relativeRowCount;
-  const row = document.createElement('div');
-  row.className = 'relative-row';
-  row.id = id;
-  row.innerHTML = `
-    <input type="text" placeholder="Family member's name" value="${value ? escapeHtml(value) : ''}">
-    <button type="button" class="relative-remove" aria-label="Remove">×</button>
-  `;
-  document.getElementById('relativesList').appendChild(row);
-  row.querySelector('input').addEventListener('input', updatePartyCount);
-  row.querySelector('.relative-remove').addEventListener('click', () => {
-    row.remove();
-    updatePartyCount();
-    renderTicketPreview();
-  });
-  updatePartyCount();
-}
-
-function getRelativeNames(){
-  return Array.from(document.querySelectorAll('#relativesList .relative-row input'))
-    .map(i => i.value.trim())
-    .filter(v => v.length > 0);
-}
-
-function updatePartyCount(){
-  const n = getRelativeNames().length;
-  document.getElementById('partyCount').textContent = 'Party size: ' + (n + 1) + (n === 0 ? ' (just you)' : '');
-  renderTicketPreview();
-}
-
-document.getElementById('addRelativeBtn').addEventListener('click', () => addRelativeRow());
-
-function renderTicketPreview(){
-  const name = document.getElementById('fName').value.trim();
-  const relatives = getRelativeNames();
-  const area = document.getElementById('ticketArea');
-  if(!name){
-    area.innerHTML = '<div class="ticket-placeholder" id="ticketPlaceholder">Your ticket will appear here once you reserve a seat.</div>';
-    return;
-  }
-  area.innerHTML = buildTicketHtml({
-    name, relatives, code: null, church: config.church, number: config.number,
-    date: config.date, time: config.time, venue: config.venue
-  }, 'previewTicketQr');
-}
-
-document.getElementById('fName').addEventListener('input', renderTicketPreview);
-
-function buildTicketHtml(t, qrId){
-  const seats = 1 + (t.relatives ? t.relatives.length : 0);
-  const guestsHtml = (t.relatives && t.relatives.length)
-    ? `<div class="ticket-guests"><span class="k">Also attending</span><span class="v">${t.relatives.map(escapeHtml).join(', ')}</span></div>`
-    : '';
-  const codeDisplay = t.code ? t.code : '— — — — — —';
-  return `
-    <div class="ticket">
-      <div class="ticket-top">
-        <p class="ticket-event">${escapeHtml(t.church)} · ${escapeHtml(t.number)}${ordinal(t.number)} anniversary</p>
-        <p class="ticket-name voice">${escapeHtml(t.name)}</p>
-        <div class="ticket-grid">
-          <div><span class="k">Date</span><span class="v">${escapeHtml(t.date)}</span></div>
-          <div><span class="k">Time</span><span class="v">${escapeHtml(t.time)}</span></div>
-          <div><span class="k">Venue</span><span class="v">${escapeHtml(t.venue)}</span></div>
-          <div><span class="k">Seats</span><span class="v">${seats}</span></div>
-        </div>
-        ${guestsHtml}
-      </div>
-      <div class="perforation"></div>
-      <div class="ticket-bottom">
-        <div>
-          <p class="ticket-code-label">Ticket code</p>
-          <p class="ticket-code">${escapeHtml(codeDisplay)}</p>
-        </div>
-        <div class="ticket-qr" id="${qrId}"></div>
-      </div>
-    </div>
-    ${t.code ? '<p class="ticket-hint">Scan the QR at the welcome desk, or show your code.</p>' : ''}
-  `;
-}
-
-function renderQrIfPossible(qrId, text){
-  if(!text) return;
-  const holder = document.getElementById(qrId);
-  if(!holder) return;
-  holder.innerHTML = '';
-  try{
-    new QRCode(holder, { text: text, width: 52, height: 52, colorDark: '#1F3A34', colorLight: '#ffffff' });
-  }catch(e){}
-}
-
-document.getElementById('submitBtn').addEventListener('click', async () => {
-  const name = document.getElementById('fName').value.trim();
-  const email = document.getElementById('fEmail').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const relatives = getRelativeNames();
-  const notes = document.getElementById('fNotes').value.trim();
-  const errEl = document.getElementById('formError');
-
-  if(!name || !email || !email.includes('@')){
-    errEl.textContent = 'Enter your name and a valid email to reserve a seat.';
-    errEl.classList.add('show');
-    return;
-  }
-  errEl.classList.remove('show');
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Reserving...';
-
-  try{
-    const result = await apiPostWithRetry('register', { name, email, phone, relatives, notes }, 3);
-    const code = result.code;
-
-    document.getElementById('ticketArea').innerHTML = buildTicketHtml({
-      name, relatives, code, church: config.church, number: config.number,
-      date: config.date, time: config.time, venue: config.venue
-    }, 'newTicketQr');
-    renderQrIfPossible('newTicketQr', code);
-
-    const confirmBox = document.getElementById('confirmBox');
-    const partyLine = relatives.length ? ` You reserved ${relatives.length + 1} seats for ${[name, ...relatives].join(', ')}.` : '';
-    confirmBox.textContent = `You're on the list, ${name}. Save your code ${code} — you can look it up anytime with your email.${partyLine}`;
-    confirmBox.classList.add('show');
-
-    document.getElementById('fName').value = '';
-    document.getElementById('fEmail').value = '';
-    document.getElementById('fPhone').value = '';
-    document.getElementById('fNotes').value = '';
-    document.getElementById('relativesList').innerHTML = '';
-    updatePartyCount();
-    showToast('Seat reserved');
-  }catch(e){
-    console.error('Registration save failed:', e);
-    errEl.textContent = "We tried a few times but couldn't save your registration due to a temporary server issue. Please wait a moment and tap \"Reserve my seat\" again — your details are still filled in above.";
-    errEl.classList.add('show');
-  }finally{
-    btn.disabled = false;
-    btn.textContent = 'Reserve my seat';
-  }
-});
-
-document.getElementById('lookupBtn').addEventListener('click', async () => {
-  const email = document.getElementById('lookupEmail').value.trim().toLowerCase();
-  const resultEl = document.getElementById('lookupResult');
-  if(!email){
-    resultEl.innerHTML = '<div class="error-text show">Enter the email you registered with.</div>';
-    return;
-  }
-  resultEl.innerHTML = '<p class="panel-sub">Searching...</p>';
-  try{
-    const data = await apiGet('list');
-    const records = data.registrations || [];
-    const found = records.find(rec => (rec.email || '').toLowerCase() === email) || null;
-    if(found){
-      resultEl.innerHTML = buildTicketHtml({
-        name: found.name, relatives: found.relatives || [], code: found.code,
-        church: config.church, number: config.number,
-        date: config.date, time: config.time, venue: config.venue
-      }, 'lookupTicketQr');
-      renderQrIfPossible('lookupTicketQr', found.code);
-    }else{
-      resultEl.innerHTML = '<div class="empty-state">No registration found for that email. Check for typos, or reserve a seat above.</div>';
-    }
-  }catch(e){
-    resultEl.innerHTML = '<div class="error-text show">Something went wrong looking that up. Try again.</div>';
-  }
-});
-
-// STAFF / ADMIN
-document.getElementById('staffBtn').addEventListener('click', () => {
-  document.getElementById('passInput').value = '';
-  document.getElementById('passError').classList.remove('show');
-  document.getElementById('passOverlay').classList.add('show');
-  document.getElementById('passInput').focus();
-});
-document.getElementById('cancelPassBtn').addEventListener('click', () => {
-  document.getElementById('passOverlay').classList.remove('show');
-});
-document.getElementById('confirmPassBtn').addEventListener('click', enterAdmin);
-document.getElementById('passInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') enterAdmin(); });
-
-async function enterAdmin(){
-  const val = document.getElementById('passInput').value;
-  if(val !== config.passcode){
-    document.getElementById('passError').classList.add('show');
-    return;
-  }
-  document.getElementById('passOverlay').classList.remove('show');
-  document.getElementById('publicView').style.display = 'none';
-  document.getElementById('adminView').style.display = 'block';
-  document.querySelector('.share-strip').style.display = 'none';
-  populateConfigForm();
-  await renderAdmin();
-}
-
-document.getElementById('exitAdminBtn').addEventListener('click', () => {
-  document.getElementById('adminView').style.display = 'none';
-  document.getElementById('publicView').style.display = 'block';
-  document.querySelector('.share-strip').style.display = 'flex';
-});
-
-document.getElementById('refreshBtn').addEventListener('click', renderAdmin);
-
-function populateConfigForm(){
-  document.getElementById('cfgChurch').value = config.church;
-  document.getElementById('cfgNumber').value = config.number;
-  document.getElementById('cfgDate').value = config.date;
-  document.getElementById('cfgTime').value = config.time;
-  document.getElementById('cfgVenue').value = config.venue;
-  document.getElementById('cfgPasscode').value = config.passcode;
-}
-
-document.getElementById('saveCfgBtn').addEventListener('click', async () => {
-  const newPasscode = document.getElementById('cfgPasscode').value.trim() || DEFAULT_CONFIG.passcode;
-  const fields = {
-    church: document.getElementById('cfgChurch').value.trim() || DEFAULT_CONFIG.church,
-    number: document.getElementById('cfgNumber').value.trim() || DEFAULT_CONFIG.number,
-    date: document.getElementById('cfgDate').value.trim() || DEFAULT_CONFIG.date,
-    time: document.getElementById('cfgTime').value.trim() || DEFAULT_CONFIG.time,
-    venue: document.getElementById('cfgVenue').value.trim() || DEFAULT_CONFIG.venue
+function readConfig_() {
+  const sheet = getConfigSheet_();
+  const row = sheet.getRange(2, 1, 1, 6).getValues()[0];
+  return {
+    church: row[0] || DEFAULT_CONFIG.church,
+    number: row[1] || DEFAULT_CONFIG.number,
+    date: cellToText_(row[2], false) || DEFAULT_CONFIG.date,
+    time: cellToText_(row[3], true) || DEFAULT_CONFIG.time,
+    venue: row[4] || DEFAULT_CONFIG.venue,
+    passcode: row[5] || DEFAULT_CONFIG.passcode
   };
-  try{
-    const result = await apiPost('saveConfig', { ...fields, passcode: config.passcode, newPasscode });
-    config = result.config;
-    applyConfigToHero();
-    showToast('Event details saved');
-  }catch(e){
-    console.error('Save config failed:', e);
-    showToast("Couldn't save event details");
-  }
-});
-
-let lastRecords = [];
-
-async function fetchAllRegistrations(){
-  const data = await apiGet('list');
-  const records = data.registrations || [];
-  records.sort((a,b) => new Date(b.registeredAt) - new Date(a.registeredAt));
-  return records;
 }
 
-function renderRegTable(records, highlightCode){
-  const tableArea = document.getElementById('tableArea');
-  if(records.length === 0){
-    tableArea.innerHTML = '<div class="empty-state">No one has registered yet. Share the registration link to start filling seats.</div>';
-    return;
+function writeConfig_(cfg) {
+  const sheet = getConfigSheet_();
+  sheet.getRange(2, 3, 1, 2).setNumberFormat('@');
+  sheet.getRange(2, 1, 1, 6).setValues([[
+    cfg.church, cfg.number, cfg.date, cfg.time, cfg.venue, cfg.passcode
+  ]]);
+}
+
+function readAllRegistrations_() {
+  const sheet = getRegSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  const rows = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  return rows
+    .filter(r => r[0]) // skip blank rows
+    .map(r => ({
+      code: r[0],
+      name: r[1],
+      email: r[2],
+      phone: r[3],
+      relatives: r[4] ? JSON.parse(r[4]) : [],
+      notes: r[5],
+      checkedIn: r[6] === true || r[6] === 'TRUE',
+      registeredAt: r[7]
+    }));
+}
+
+function findRowByCode_(sheet, code) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  const codes = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  for (let i = 0; i < codes.length; i++) {
+    if (codes[i][0] === code) return i + 2; // 1-indexed, +1 for header
   }
-  const rows = records.map(r => {
-    const relatives = r.relatives && r.relatives.length ? r.relatives.join(', ') : '<span style="color:var(--ink-soft);">—</span>';
-    return `
-    <tr class="${r.code === highlightCode ? 'highlight' : ''}">
-      <td>${escapeHtml(r.name)}</td>
-      <td>${escapeHtml(r.email)}${r.phone ? '<br><span style="color:var(--ink-soft); font-size:12px;">'+escapeHtml(r.phone)+'</span>' : ''}</td>
-      <td>${relatives}</td>
-      <td>${1 + (r.relatives ? r.relatives.length : 0)}</td>
-      <td style="font-family:'Fraunces',serif;">${escapeHtml(r.code)}</td>
-      <td>
-        <button class="check-toggle" data-code="${escapeHtml(r.code)}">
-          <span class="badge ${r.checkedIn ? 'checked' : ''}">${r.checkedIn ? 'Checked in' : 'Not yet'}</span>
-        </button>
-      </td>
-    </tr>
-  `;
-  }).join('');
+  return -1;
+}
 
-  tableArea.innerHTML = `
-    <table class="reg-table">
-      <thead><tr><th>Name</th><th>Contact</th><th>Family / guests</th><th>Seats</th><th>Code</th><th>Status</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+function jsonOut_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
-  tableArea.querySelectorAll('.check-toggle').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const code = btn.getAttribute('data-code');
-      try{
-        await apiPost('checkin', { code, passcode: config.passcode });
-        await renderAdmin();
-      }catch(e){
-        console.error('Check-in toggle failed:', e);
-        showToast("Couldn't update check-in status");
+function doGet(e) {
+  const action = e.parameter.action;
+  try {
+    if (action === 'list') {
+      return jsonOut_({ ok: true, registrations: readAllRegistrations_() });
+    }
+    if (action === 'config') {
+      return jsonOut_({ ok: true, config: readConfig_() });
+    }
+    return jsonOut_({ ok: false, error: 'Unknown action' });
+  } catch (err) {
+    return jsonOut_({ ok: false, error: String(err) });
+  }
+}
+
+function doPost(e) {
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return jsonOut_({ ok: false, error: 'Invalid request body' });
+  }
+
+  const action = data.action;
+  const cfg = readConfig_();
+
+  try {
+    if (action === 'register') {
+      const lock = LockService.getScriptLock();
+      lock.waitLock(10000);
+      try {
+        const sheet = getRegSheet_();
+        // Sheet has a header row, so getLastRow() already equals
+        // (existing entries + 1) — i.e. the next sequential entry number.
+        const nextNum = sheet.getLastRow();
+        const code = '#' + nextNum;
+        const now = new Date().toISOString();
+        sheet.appendRow([
+          code,
+          data.name || '',
+          data.email || '',
+          data.phone || '',
+          JSON.stringify(data.relatives || []),
+          '',
+          false,
+          now
+        ]);
+        return jsonOut_({ ok: true, code: code, registeredAt: now });
+      } finally {
+        lock.releaseLock();
       }
-    });
-  });
-}
+    }
 
-async function renderAdmin(){
-  const statGrid = document.getElementById('statGrid');
-  statGrid.innerHTML = '<p class="panel-sub">Loading registrations...</p>';
-  document.getElementById('tableArea').innerHTML = '';
-  document.getElementById('checkinFeedback').textContent = '';
+    if (action === 'checkin') {
+      if (data.passcode !== cfg.passcode) {
+        return jsonOut_({ ok: false, error: 'Invalid passcode' });
+      }
+      const sheet = getRegSheet_();
+      const rowIndex = findRowByCode_(sheet, data.code);
+      if (rowIndex === -1) return jsonOut_({ ok: false, error: 'Registration not found' });
+      const current = sheet.getRange(rowIndex, 7).getValue();
+      const next = data.hasOwnProperty('checkedIn') ? !!data.checkedIn : !current;
+      sheet.getRange(rowIndex, 7).setValue(next);
+      return jsonOut_({ ok: true, checkedIn: next });
+    }
 
-  let records;
-  try{
-    records = await fetchAllRegistrations();
-    lastRecords = records;
-  }catch(e){
-    statGrid.innerHTML = '<div class="error-text show">Couldn\'t load registrations. Try refreshing.</div>';
-    return;
-  }
+    if (action === 'saveConfig') {
+      if (data.passcode !== cfg.passcode) {
+        return jsonOut_({ ok: false, error: 'Invalid passcode' });
+      }
+      const newConfig = {
+        church: data.church || cfg.church,
+        number: data.number || cfg.number,
+        date: data.date || cfg.date,
+        time: data.time || cfg.time,
+        venue: data.venue || cfg.venue,
+        passcode: data.newPasscode || cfg.passcode
+      };
+      writeConfig_(newConfig);
+      return jsonOut_({ ok: true, config: newConfig });
+    }
 
-  const totalGuests = records.reduce((sum, r) => sum + 1 + (r.relatives ? r.relatives.length : 0), 0);
-  const checkedIn = records.filter(r => r.checkedIn).length;
+    if (action === 'clearAll') {
+      if (data.passcode !== cfg.passcode) {
+        return jsonOut_({ ok: false, error: 'Invalid passcode' });
+      }
+      const sheet = getRegSheet_();
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.getRange(2, 1, lastRow - 1, 8).clearContent();
+      }
+      return jsonOut_({ ok: true });
+    }
 
-  statGrid.innerHTML = `
-    <div class="stat-card"><div class="num voice">${records.length}</div><div class="lbl">Registrations</div></div>
-    <div class="stat-card"><div class="num voice">${totalGuests}</div><div class="lbl">Seats reserved</div></div>
-    <div class="stat-card"><div class="num voice">${checkedIn}</div><div class="lbl">Checked in</div></div>
-  `;
-
-  renderRegTable(records, null);
-}
-
-document.getElementById('checkinBtn').addEventListener('click', doCheckin);
-document.getElementById('checkinInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') doCheckin(); });
-
-async function doCheckin(){
-  const raw = document.getElementById('checkinInput').value.trim();
-  const feedback = document.getElementById('checkinFeedback');
-  if(!raw){
-    feedback.textContent = 'Enter a ticket code or name first.';
-    feedback.className = 'checkin-feedback bad';
-    return;
-  }
-  const query = raw.toLowerCase();
-  let match = lastRecords.find(r => r.code.toLowerCase() === query);
-  if(!match){
-    match = lastRecords.find(r => r.name.toLowerCase().includes(query) ||
-      (r.relatives || []).some(name => name.toLowerCase().includes(query)));
-  }
-  if(!match){
-    feedback.textContent = "No matching registration found.";
-    feedback.className = 'checkin-feedback bad';
-    return;
-  }
-  try{
-    await apiPost('checkin', { code: match.code, passcode: config.passcode, checkedIn: true });
-    feedback.textContent = `Checked in ${match.name} (${match.code}) — party of ${1 + (match.relatives ? match.relatives.length : 0)}.`;
-    feedback.className = 'checkin-feedback ok';
-    document.getElementById('checkinInput').value = '';
-    await renderAdmin();
-    renderRegTable(lastRecords, match.code);
-  }catch(e){
-    console.error('Check-in failed:', e);
-    feedback.textContent = "Couldn't update check-in status.";
-    feedback.className = 'checkin-feedback bad';
+    return jsonOut_({ ok: false, error: 'Unknown action' });
+  } catch (err) {
+    return jsonOut_({ ok: false, error: String(err) });
   }
 }
-
-document.getElementById('clearAllBtn').addEventListener('click', () => {
-  document.getElementById('clearOverlay').classList.add('show');
-});
-document.getElementById('cancelClearBtn').addEventListener('click', () => {
-  document.getElementById('clearOverlay').classList.remove('show');
-});
-document.getElementById('confirmClearBtn').addEventListener('click', async () => {
-  try{
-    await apiPost('clearAll', { passcode: config.passcode });
-    document.getElementById('clearOverlay').classList.remove('show');
-    showToast('All registrations cleared');
-    await renderAdmin();
-  }catch(e){
-    console.error('Clear all failed:', e);
-    showToast("Couldn't clear registrations");
-  }
-});
-
-loadConfig();
-setupShareBox();
-updatePartyCount();
-</script>
-</body>
-</html>
