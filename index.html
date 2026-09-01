@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anniversary Celebration — Pre-Registration</title>
+<title>Anniversary Celebration — Registration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -400,7 +400,7 @@
     <div class="hero-number" id="heroNumber">24</div>
     <div class="hero-text">
       <p class="hero-eyebrow">You're invited to celebrate</p>
-      <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th Anniversary</h1>
+      <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th anniversary</h1>
       <p class="hero-verse">"For I the Lord do not change."<span>— Malachi 3:6</span></p>
       <div class="hero-meta">
         <div><span class="label">Date</span> <span id="heroDate">Sunday, 04 October 2026</span></div>
@@ -415,7 +415,7 @@
   <div class="share-strip">
     <div class="share-text">
       <p class="title voice">Share this page</p>
-      <p class="sub">Send the link or QR code to anyone you'd like to invite.</p>
+      <p class="sub">Send the link or QR code to anyone you'd like to invite. Once open, they can reserve their own seat.</p>
       <div class="share-link-row">
         <input type="text" id="shareLinkInput" readonly>
         <button class="btn-secondary" id="copyLinkBtn" type="button">Copy</button>
@@ -428,7 +428,7 @@
     <div class="main-grid">
       <div>
         <p class="panel-title voice">With the love of God, we welcome you wholeheartedly.</p>
-        <p class="panel-sub">Registration is free. Bring this ticket, printed or on your phone, to the welcome desk.</p>
+        <p class="panel-sub">Bring this e-registration, printed or on your phone, to the welcome desk.</p>
 
         <div class="field">
           <label for="fName">Full name</label>
@@ -436,8 +436,8 @@
         </div>
         <div class="field-row">
           <div class="field">
-            <label for="fEmail">Email</label>
-            <input type="email" id="fEmail" placeholder="lanarivera@email.com" autocomplete="email">
+            <label for="fFacebook">Facebook / Messenger name</label>
+            <input type="text" id="fFacebook" placeholder="e.g. Lana Rivera or facebook.com/lana.rivera" autocomplete="off">
           </div>
           <div class="field">
             <label for="fPhone">Phone (optional)</label>
@@ -452,15 +452,15 @@
           <p class="party-count" id="partyCount">Headcount: 1 (just you)</p>
         </div>
 
-        <div class="error-text" id="formError">Enter your name and email to reserve a seat.</div>
-        <button class="btn-primary" id="submitBtn" type="button">Register</button>
+        <div class="error-text" id="formError">Enter your name and Facebook/Messenger name to reserve a seat.</div>
+        <button class="btn-primary" id="submitBtn" type="button">Reserve my seat</button>
         <div class="confirm-box" id="confirmBox"></div>
 
         <div class="lookup-block">
           <p class="panel-title voice" style="font-size:18px;">Already registered?</p>
-          <p class="panel-sub" style="margin-bottom:14px;">Look up your ticket with the email you used.</p>
+          <p class="panel-sub" style="margin-bottom:14px;">Look up your ticket with the Facebook/Messenger name you used.</p>
           <div class="lookup-row">
-            <input type="email" id="lookupEmail" placeholder="lanarae@email.com">
+            <input type="text" id="lookupFacebook" placeholder="e.g. Lana Rivera or facebook.com/lana.rivera">
             <button class="btn-secondary" id="lookupBtn" type="button">Find ticket</button>
           </div>
           <div class="lookup-result" id="lookupResult"></div>
@@ -764,13 +764,13 @@ function renderQrIfPossible(qrId, text){
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const name = document.getElementById('fName').value.trim();
-  const email = document.getElementById('fEmail').value.trim();
+  const facebook = document.getElementById('fFacebook').value.trim();
   const phone = document.getElementById('fPhone').value.trim();
   const relatives = getRelatives();
   const errEl = document.getElementById('formError');
 
-  if(!name || !email || !email.includes('@')){
-    errEl.textContent = 'Enter your name and a valid email to reserve a seat.';
+  if(!name || !facebook){
+    errEl.textContent = 'Enter your name and Facebook/Messenger name to reserve a seat.';
     errEl.classList.add('show');
     return;
   }
@@ -781,7 +781,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   btn.textContent = 'Reserving...';
 
   try{
-    const result = await apiPostWithRetry('register', { name, email, phone, relatives }, 3);
+    const result = await apiPostWithRetry('register', { name, facebook, phone, relatives }, 3);
     const code = result.code;
 
     document.getElementById('ticketArea').innerHTML = buildTicketHtml({
@@ -792,11 +792,11 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 
     const confirmBox = document.getElementById('confirmBox');
     const partyLine = relatives.length ? ` You reserved ${relatives.length + 1} seats for ${[name, ...relatives.map(r => r.name)].join(', ')}.` : '';
-    confirmBox.textContent = `You're on the list, ${name}. Save your entry number ${code} — you can look it up anytime with your email.${partyLine}`;
+    confirmBox.textContent = `You're on the list, ${name}. Save your entry number ${code} — you can look it up anytime with your Facebook/Messenger name.${partyLine}`;
     confirmBox.classList.add('show');
 
     document.getElementById('fName').value = '';
-    document.getElementById('fEmail').value = '';
+    document.getElementById('fFacebook').value = '';
     document.getElementById('fPhone').value = '';
     document.getElementById('relativesList').innerHTML = '';
     updatePartyCount();
@@ -892,7 +892,7 @@ function renderLookupResult(record){
     saveBtn.textContent = 'Saving...';
     try{
       await apiPost('update', {
-        code: record.code, email: record.email,
+        code: record.code, facebook: record.facebook,
         name: newName, phone: newPhone, relatives: newRelatives
       });
       record.name = newName;
@@ -911,22 +911,22 @@ function renderLookupResult(record){
 }
 
 document.getElementById('lookupBtn').addEventListener('click', async () => {
-  const email = document.getElementById('lookupEmail').value.trim().toLowerCase();
+  const facebook = document.getElementById('lookupFacebook').value.trim().toLowerCase();
   const resultEl = document.getElementById('lookupResult');
-  if(!email){
-    resultEl.innerHTML = '<div class="error-text show">Enter the email you registered with.</div>';
+  if(!facebook){
+    resultEl.innerHTML = '<div class="error-text show">Enter the Facebook/Messenger name you registered with.</div>';
     return;
   }
   resultEl.innerHTML = '<p class="panel-sub">Searching...</p>';
   try{
     const data = await apiGet('list');
     const records = data.registrations || [];
-    const found = records.find(rec => (rec.email || '').toLowerCase() === email) || null;
+    const found = records.find(rec => (rec.facebook || '').toLowerCase() === facebook) || null;
     if(found){
-      found.email = found.email || email;
+      found.facebook = found.facebook || facebook;
       renderLookupResult(found);
     }else{
-      resultEl.innerHTML = '<div class="empty-state">No registration found for that email. Check for typos, or reserve a seat above.</div>';
+      resultEl.innerHTML = '<div class="empty-state">No registration found for that Facebook/Messenger name. Check for typos, or reserve a seat above.</div>';
     }
   }catch(e){
     resultEl.innerHTML = '<div class="error-text show">Something went wrong looking that up. Try again.</div>';
@@ -1022,7 +1022,7 @@ function renderRegTable(records, highlightCode){
     return `
     <tr class="${r.code === highlightCode ? 'highlight' : ''}">
       <td>${escapeHtml(r.name)}</td>
-      <td>${escapeHtml(r.email)}${r.phone ? '<br><span style="color:var(--ink-soft); font-size:12px;">'+escapeHtml(r.phone)+'</span>' : ''}</td>
+      <td>${escapeHtml(r.facebook)}${r.phone ? '<br><span style="color:var(--ink-soft); font-size:12px;">'+escapeHtml(r.phone)+'</span>' : ''}</td>
       <td>${relatives}</td>
       <td>${1 + (r.relatives ? r.relatives.length : 0)}</td>
       <td style="font-family:'Fraunces',serif;">${escapeHtml(r.code)}</td>
