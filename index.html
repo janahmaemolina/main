@@ -400,7 +400,7 @@
     <div class="hero-number" id="heroNumber">24</div>
     <div class="hero-text">
       <p class="hero-eyebrow">You're invited to celebrate</p>
-      <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th anniversary</h1>
+      <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th Anniversary</h1>
       <p class="hero-verse">"For I the Lord do not change."<span>— Malachi 3:6</span></p>
       <div class="hero-meta">
         <div><span class="label">Date</span> <span id="heroDate">Sunday, 04 October 2026</span></div>
@@ -437,7 +437,7 @@
         <div class="field-row">
           <div class="field">
             <label for="fFacebook">Facebook / Messenger name</label>
-            <input type="text" id="fFacebook" placeholder="e.g. Lana Rivera or facebook.com/lana.rivera" autocomplete="off">
+            <input type="text" id="fFacebook" placeholder="e.g. Lana Rivera/lana.rivera" autocomplete="off">
           </div>
           <div class="field">
             <label for="fPhone">Phone (optional)</label>
@@ -453,7 +453,7 @@
         </div>
 
         <div class="error-text" id="formError">Enter your name and Facebook/Messenger name to reserve a seat.</div>
-        <button class="btn-primary" id="submitBtn" type="button">Reserve my seat</button>
+        <button class="btn-primary" id="submitBtn" type="button">Register</button>
         <div class="confirm-box" id="confirmBox"></div>
 
         <div class="lookup-block">
@@ -807,7 +807,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     errEl.classList.add('show');
   }finally{
     btn.disabled = false;
-    btn.textContent = 'Reserve my seat';
+    btn.textContent = 'Register';
   }
 });
 
