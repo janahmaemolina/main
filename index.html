@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anniversary Celebration — Registration</title>
+<title>Anniversary Celebration — Pre-Registration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -183,8 +183,9 @@
   /* RELATIVES */
   .relatives-block{margin-bottom:20px;}
   .relatives-label{font-size:13px; color:var(--ink-soft); margin-bottom:8px; display:block;}
-  .relative-row{display:flex; gap:8px; margin-bottom:8px;}
-  .relative-row input{flex:1;}
+  .relative-row{display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;}
+  .relative-row input{flex:1; min-width:140px;}
+  .relative-row input.rel-phone{flex:0 1 150px;}
   .relative-remove{
     background:transparent; border:1px solid var(--line); border-radius:var(--radius);
     color:var(--ink-soft); width:38px; cursor:pointer; font-size:16px; flex-shrink:0;
@@ -399,7 +400,7 @@
     <div class="hero-number" id="heroNumber">24</div>
     <div class="hero-text">
       <p class="hero-eyebrow">You're invited to celebrate</p>
-      <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th anniversary</h1>
+      <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th Anniversary</h1>
       <p class="hero-verse">"For I the Lord do not change."<span>— Malachi 3:6</span></p>
       <div class="hero-meta">
         <div><span class="label">Date</span> <span id="heroDate">Sunday, 04 October 2026</span></div>
@@ -414,7 +415,7 @@
   <div class="share-strip">
     <div class="share-text">
       <p class="title voice">Share this page</p>
-      <p class="sub">Send the link or QR code to anyone you'd like to invite. Once open, they can reserve their own seat.</p>
+      <p class="sub">Send the link or QR code to anyone you'd like to invite.</p>
       <div class="share-link-row">
         <input type="text" id="shareLinkInput" readonly>
         <button class="btn-secondary" id="copyLinkBtn" type="button">Copy</button>
@@ -426,17 +427,17 @@
   <div id="publicView">
     <div class="main-grid">
       <div>
-        <p class="panel-title voice">Reserve your seat</p>
+        <p class="panel-title voice">With the love of God, we welcome you wholeheartedly.</p>
         <p class="panel-sub">Registration is free. Bring this ticket, printed or on your phone, to the welcome desk.</p>
 
         <div class="field">
           <label for="fName">Full name</label>
-          <input type="text" id="fName" placeholder="Ruth Adeyemi" autocomplete="name">
+          <input type="text" id="fName" placeholder="Lana Rivera" autocomplete="name">
         </div>
         <div class="field-row">
           <div class="field">
             <label for="fEmail">Email</label>
-            <input type="email" id="fEmail" placeholder="ruth@email.com" autocomplete="email">
+            <input type="email" id="fEmail" placeholder="lanarivera@email.com" autocomplete="email">
           </div>
           <div class="field">
             <label for="fPhone">Phone (optional)</label>
@@ -448,18 +449,18 @@
           <label class="relatives-label">Inviting family or friends? Add their names</label>
           <div id="relativesList"></div>
           <button class="add-relative-btn" id="addRelativeBtn" type="button">+ Invite a family member</button>
-          <p class="party-count" id="partyCount">Party size: 1 (just you)</p>
+          <p class="party-count" id="partyCount">Headcount: 1 (just you)</p>
         </div>
 
         <div class="error-text" id="formError">Enter your name and email to reserve a seat.</div>
-        <button class="btn-primary" id="submitBtn" type="button">Reserve my seat</button>
+        <button class="btn-primary" id="submitBtn" type="button">Register</button>
         <div class="confirm-box" id="confirmBox"></div>
 
         <div class="lookup-block">
           <p class="panel-title voice" style="font-size:18px;">Already registered?</p>
           <p class="panel-sub" style="margin-bottom:14px;">Look up your ticket with the email you used.</p>
           <div class="lookup-row">
-            <input type="email" id="lookupEmail" placeholder="ruth@email.com">
+            <input type="email" id="lookupEmail" placeholder="lanarae@email.com">
             <button class="btn-secondary" id="lookupBtn" type="button">Find ticket</button>
           </div>
           <div class="lookup-result" id="lookupResult"></div>
@@ -660,18 +661,26 @@ document.getElementById('copyLinkBtn').addEventListener('click', async () => {
 });
 
 // RELATIVES
+function normalizeRelative_(value){
+  if(!value) return { name: '', phone: '' };
+  if(typeof value === 'string') return { name: value, phone: '' };
+  return { name: value.name || '', phone: value.phone || '' };
+}
+
 function addRelativeRow(value){
   relativeRowCount++;
   const id = 'rel-' + relativeRowCount;
+  const rel = normalizeRelative_(value);
   const row = document.createElement('div');
   row.className = 'relative-row';
   row.id = id;
   row.innerHTML = `
-    <input type="text" placeholder="Family member's name" value="${value ? escapeHtml(value) : ''}">
+    <input type="text" class="rel-name" placeholder="Family member's name" value="${escapeHtml(rel.name)}">
+    <input type="tel" class="rel-phone" placeholder="Phone (optional)" value="${escapeHtml(rel.phone)}">
     <button type="button" class="relative-remove" aria-label="Remove">×</button>
   `;
   document.getElementById('relativesList').appendChild(row);
-  row.querySelector('input').addEventListener('input', updatePartyCount);
+  row.querySelector('.rel-name').addEventListener('input', updatePartyCount);
   row.querySelector('.relative-remove').addEventListener('click', () => {
     row.remove();
     updatePartyCount();
@@ -680,14 +689,15 @@ function addRelativeRow(value){
   updatePartyCount();
 }
 
-function getRelativeNames(){
-  return Array.from(document.querySelectorAll('#relativesList .relative-row input'))
-    .map(i => i.value.trim())
-    .filter(v => v.length > 0);
+function getRelatives(){
+  return Array.from(document.querySelectorAll('#relativesList .relative-row')).map(row => ({
+    name: row.querySelector('.rel-name').value.trim(),
+    phone: row.querySelector('.rel-phone').value.trim()
+  })).filter(r => r.name.length > 0);
 }
 
 function updatePartyCount(){
-  const n = getRelativeNames().length;
+  const n = getRelatives().length;
   document.getElementById('partyCount').textContent = 'Party size: ' + (n + 1) + (n === 0 ? ' (just you)' : '');
   renderTicketPreview();
 }
@@ -696,7 +706,7 @@ document.getElementById('addRelativeBtn').addEventListener('click', () => addRel
 
 function renderTicketPreview(){
   const name = document.getElementById('fName').value.trim();
-  const relatives = getRelativeNames();
+  const relatives = getRelatives();
   const area = document.getElementById('ticketArea');
   if(!name){
     area.innerHTML = '<div class="ticket-placeholder" id="ticketPlaceholder">Your ticket will appear here once you reserve a seat.</div>';
@@ -713,7 +723,7 @@ document.getElementById('fName').addEventListener('input', renderTicketPreview);
 function buildTicketHtml(t, qrId){
   const seats = 1 + (t.relatives ? t.relatives.length : 0);
   const guestsHtml = (t.relatives && t.relatives.length)
-    ? `<div class="ticket-guests"><span class="k">Also attending</span><span class="v">${t.relatives.map(escapeHtml).join(', ')}</span></div>`
+    ? `<div class="ticket-guests"><span class="k">Also attending</span><span class="v">${t.relatives.map(r => escapeHtml(typeof r === 'string' ? r : r.name)).join(', ')}</span></div>`
     : '';
   const codeDisplay = t.code ? t.code : '#—';
   return `
@@ -756,7 +766,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const name = document.getElementById('fName').value.trim();
   const email = document.getElementById('fEmail').value.trim();
   const phone = document.getElementById('fPhone').value.trim();
-  const relatives = getRelativeNames();
+  const relatives = getRelatives();
   const errEl = document.getElementById('formError');
 
   if(!name || !email || !email.includes('@')){
@@ -781,7 +791,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     renderQrIfPossible('newTicketQr', code);
 
     const confirmBox = document.getElementById('confirmBox');
-    const partyLine = relatives.length ? ` You reserved ${relatives.length + 1} seats for ${[name, ...relatives].join(', ')}.` : '';
+    const partyLine = relatives.length ? ` You reserved ${relatives.length + 1} seats for ${[name, ...relatives.map(r => r.name)].join(', ')}.` : '';
     confirmBox.textContent = `You're on the list, ${name}. Save your entry number ${code} — you can look it up anytime with your email.${partyLine}`;
     confirmBox.classList.add('show');
 
@@ -801,6 +811,105 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   }
 });
 
+let editRelativeRowCount = 0;
+
+function addEditRelativeRow(value){
+  editRelativeRowCount++;
+  const rel = normalizeRelative_(value);
+  const row = document.createElement('div');
+  row.className = 'relative-row';
+  row.innerHTML = `
+    <input type="text" class="rel-name" placeholder="Family member's name" value="${escapeHtml(rel.name)}">
+    <input type="tel" class="rel-phone" placeholder="Phone (optional)" value="${escapeHtml(rel.phone)}">
+    <button type="button" class="relative-remove" aria-label="Remove">×</button>
+  `;
+  document.getElementById('editRelativesList').appendChild(row);
+  row.querySelector('.relative-remove').addEventListener('click', () => row.remove());
+}
+
+function getEditRelatives(){
+  return Array.from(document.querySelectorAll('#editRelativesList .relative-row')).map(row => ({
+    name: row.querySelector('.rel-name').value.trim(),
+    phone: row.querySelector('.rel-phone').value.trim()
+  })).filter(r => r.name.length > 0);
+}
+
+function buildEditPanelHtml(){
+  return `
+    <div style="margin-top:16px;">
+      <button class="btn-secondary" id="editRegBtn" type="button">Edit my registration</button>
+    </div>
+    <div class="config-form" id="editPanel" style="display:none; margin-top:12px;">
+      <div class="field"><label for="editName">Full name</label><input type="text" id="editName"></div>
+      <div class="field"><label for="editPhone">Phone (optional)</label><input type="tel" id="editPhone"></div>
+      <div class="relatives-block">
+        <label class="relatives-label">Family or friends attending with you</label>
+        <div id="editRelativesList"></div>
+        <button class="add-relative-btn" id="editAddRelativeBtn" type="button">+ Add a family member</button>
+      </div>
+      <div class="error-text" id="editError"></div>
+      <button class="btn-primary" id="saveEditBtn" type="button" style="margin-top:12px;">Save changes</button>
+    </div>
+  `;
+}
+
+function renderLookupResult(record){
+  const resultEl = document.getElementById('lookupResult');
+  resultEl.innerHTML = buildTicketHtml({
+    name: record.name, relatives: record.relatives || [], code: record.code,
+    church: config.church, number: config.number,
+    date: config.date, time: config.time, venue: config.venue
+  }, 'lookupTicketQr') + buildEditPanelHtml();
+  renderQrIfPossible('lookupTicketQr', record.code);
+
+  document.getElementById('editName').value = record.name;
+  document.getElementById('editPhone').value = record.phone || '';
+  editRelativeRowCount = 0;
+  document.getElementById('editRelativesList').innerHTML = '';
+  (record.relatives || []).forEach(r => addEditRelativeRow(r));
+
+  document.getElementById('editRegBtn').addEventListener('click', () => {
+    const panel = document.getElementById('editPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('editAddRelativeBtn').addEventListener('click', () => addEditRelativeRow());
+
+  document.getElementById('saveEditBtn').addEventListener('click', async () => {
+    const newName = document.getElementById('editName').value.trim();
+    const newPhone = document.getElementById('editPhone').value.trim();
+    const newRelatives = getEditRelatives();
+    const editErrEl = document.getElementById('editError');
+
+    if(!newName){
+      editErrEl.textContent = 'Name cannot be empty.';
+      editErrEl.classList.add('show');
+      return;
+    }
+    editErrEl.classList.remove('show');
+
+    const saveBtn = document.getElementById('saveEditBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    try{
+      await apiPost('update', {
+        code: record.code, email: record.email,
+        name: newName, phone: newPhone, relatives: newRelatives
+      });
+      record.name = newName;
+      record.phone = newPhone;
+      record.relatives = newRelatives;
+      showToast('Registration updated');
+      renderLookupResult(record);
+    }catch(e){
+      console.error('Update failed:', e);
+      editErrEl.textContent = "Couldn't save your changes. Try again.";
+      editErrEl.classList.add('show');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save changes';
+    }
+  });
+}
+
 document.getElementById('lookupBtn').addEventListener('click', async () => {
   const email = document.getElementById('lookupEmail').value.trim().toLowerCase();
   const resultEl = document.getElementById('lookupResult');
@@ -814,12 +923,8 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     const records = data.registrations || [];
     const found = records.find(rec => (rec.email || '').toLowerCase() === email) || null;
     if(found){
-      resultEl.innerHTML = buildTicketHtml({
-        name: found.name, relatives: found.relatives || [], code: found.code,
-        church: config.church, number: config.number,
-        date: config.date, time: config.time, venue: config.venue
-      }, 'lookupTicketQr');
-      renderQrIfPossible('lookupTicketQr', found.code);
+      found.email = found.email || email;
+      renderLookupResult(found);
     }else{
       resultEl.innerHTML = '<div class="empty-state">No registration found for that email. Check for typos, or reserve a seat above.</div>';
     }
@@ -908,7 +1013,12 @@ function renderRegTable(records, highlightCode){
     return;
   }
   const rows = records.map(r => {
-    const relatives = r.relatives && r.relatives.length ? r.relatives.join(', ') : '<span style="color:var(--ink-soft);">—</span>';
+    const relatives = r.relatives && r.relatives.length
+      ? r.relatives.map(rel => {
+          if(typeof rel === 'string') return escapeHtml(rel);
+          return escapeHtml(rel.name) + (rel.phone ? ' <span style="color:var(--ink-soft); font-size:12px;">(' + escapeHtml(rel.phone) + ')</span>' : '');
+        }).join(', ')
+      : '<span style="color:var(--ink-soft);">—</span>';
     return `
     <tr class="${r.code === highlightCode ? 'highlight' : ''}">
       <td>${escapeHtml(r.name)}</td>
