@@ -698,7 +698,7 @@ function getRelatives(){
 
 function updatePartyCount(){
   const n = getRelatives().length;
-  document.getElementById('partyCount').textContent = 'Party size: ' + (n + 1) + (n === 0 ? ' (just you)' : '');
+  document.getElementById('partyCount').textContent = 'Headcount: ' + (n + 1) + (n === 0 ? ' (just you)' : '');
   renderTicketPreview();
 }
 
