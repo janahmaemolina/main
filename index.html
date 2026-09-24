@@ -1161,7 +1161,7 @@ async function doCheckin(){
   }
   try{
     await apiPost('checkin', { code: match.code, passcode: config.passcode, checkedIn: true });
-    feedback.textContent = `Checked in ${match.name} (${match.code}) — party of ${1 + (match.relatives ? match.relatives.length : 0)}.`;
+    feedback.textContent = `Checked in ${match.name} (${match.code}) — headcount: ${1 + (match.relatives ? match.relatives.length : 0)}.`;
     feedback.className = 'checkin-feedback ok';
     document.getElementById('checkinInput').value = '';
     await renderAdmin();
