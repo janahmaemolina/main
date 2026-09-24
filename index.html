@@ -1193,10 +1193,29 @@ document.getElementById('confirmClearBtn').addEventListener('click', async () =>
 
 // SELF CHECK-IN PAGE
 function findRecordByQuery_(records, query){
-  const q = query.trim().toLowerCase();
-  let exact = records.find(r => (r.code || '').toLowerCase() === q);
-  if(exact) return exact;
-  return records.find(r => (r.facebook || '').toLowerCase() === q) || null;
+  const q = query.trim().toLowerCase().replace(/^#/, '');
+  if(!q) return null;
+
+  // 1) exact code match (most specific, wins first)
+  let hit = records.find(r => (r.code || '').toLowerCase().replace(/^#/, '') === q);
+  if(hit) return hit;
+
+  // 2) exact Facebook/Messenger name match
+  hit = records.find(r => (r.facebook || '').toLowerCase().trim() === q);
+  if(hit) return hit;
+
+  // 3) partial/contains match on code, Facebook name, attendee name, or guest names
+  hit = records.find(r => {
+    const code = (r.code || '').toLowerCase();
+    const fb = (r.facebook || '').toLowerCase();
+    const name = (r.name || '').toLowerCase();
+    const guestMatch = (r.relatives || []).some(rel => {
+      const relName = (typeof rel === 'string' ? rel : (rel.name || '')).toLowerCase();
+      return relName.includes(q);
+    });
+    return code.includes(q) || fb.includes(q) || q.includes(fb) && fb.length > 2 || name.includes(q) || guestMatch;
+  });
+  return hit || null;
 }
 
 function renderSelfCheckinFound(rec){
@@ -1251,9 +1270,13 @@ document.getElementById('selfCheckinFindBtn').addEventListener('click', async ()
   try{
     const data = await apiGet('list');
     const records = data.registrations || [];
+    if(records.length === 0){
+      resultEl.innerHTML = '<div class="error-text show">The registration list is empty right now, which usually means a connection issue rather than a typo. Try refreshing, or ask staff to check the dashboard.</div>';
+      return;
+    }
     const rec = findRecordByQuery_(records, raw);
     if(!rec){
-      resultEl.innerHTML = '<div class="empty-state">No matching registration found. Check the entry number or name, or register from the main page.</div>';
+      resultEl.innerHTML = '<div class="empty-state">No match for "' + escapeHtml(raw) + '". Double-check the entry number or the exact Facebook/Messenger name you registered with, or register from the main page.</div>';
       return;
     }
     renderSelfCheckinFound(rec);
