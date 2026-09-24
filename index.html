@@ -43,6 +43,8 @@
     position:relative;
     overflow:hidden;
   }
+    .hero-number-block{display:flex;flex-direction:column;align-items:center;}
+  .hero-logo{width:min(280px, 60vw);height:auto;margin-bottom:8px;filter:drop-shadow(0 4px 14px rgba(0,0,0,0.35));}
   .hero-inner{max-width:1080px;margin:0 auto;display:flex;align-items:flex-end;gap:40px;flex-wrap:wrap;}
   .hero-number{
     font-family:'Fraunces', serif;
@@ -397,7 +399,10 @@
 <div class="hero" id="hero">
   <button class="staff-link" id="staffBtn" type="button">Staff</button>
   <div class="hero-inner">
-    <div class="hero-number" id="heroNumber">24</div>
+    <div class="hero-number-block">
+      <img class="hero-logo" src="./logo.png" alt="Jesus Christ — To God Be The Glory logo">
+      <div class="hero-number" id="heroNumber">24</div>
+     </div>
     <div class="hero-text">
       <p class="hero-eyebrow">You're invited to celebrate</p>
       <h1 class="hero-title voice" id="heroTitle">Jesus Christ To God Be The Glory Singapore Extension Church — 24th Anniversary</h1>
