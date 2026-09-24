@@ -464,6 +464,7 @@
             <button class="btn-secondary" id="lookupBtn" type="button">Find ticket</button>
           </div>
           <div class="lookup-result" id="lookupResult"></div>
+          <p class="panel-sub" style="margin:18px 0 0;">At the venue? <a href="#checkin" style="color:var(--pine);">Check yourself in here →</a></p>
         </div>
       </div>
 
@@ -510,12 +511,38 @@
     </div>
     <div class="checkin-feedback" id="checkinFeedback"></div>
 
+    <div class="share-strip" style="margin-top:0; margin-bottom:28px;">
+      <div class="share-text">
+        <p class="title voice">Self check-in kiosk link</p>
+        <p class="sub">Print this QR or link at the entrance so guests can check themselves in on their own phones — no staff passcode needed.</p>
+        <div class="share-link-row">
+          <input type="text" id="checkinLinkInput" readonly>
+          <button class="btn-secondary" id="copyCheckinLinkBtn" type="button">Copy</button>
+        </div>
+      </div>
+      <div class="share-qr" id="checkinQr"></div>
+    </div>
+
     <div class="table-scroll">
       <div id="tableArea"></div>
     </div>
 
     <div style="margin-top:28px;">
       <button class="btn-danger" id="clearAllBtn" type="button">Clear all registrations</button>
+    </div>
+  </div>
+
+  <div id="checkinPageView" style="display:none;">
+    <div style="max-width:460px; margin:0 auto;">
+      <p class="panel-title voice">Check yourself in</p>
+      <p class="panel-sub">Enter your entry number, or the Facebook/Messenger name you registered with.</p>
+      <div class="field">
+        <label for="selfCheckinInput">Entry number or Facebook/Messenger name</label>
+        <input type="text" id="selfCheckinInput" placeholder="e.g. 24-001 or Lana Rivera">
+      </div>
+      <button class="btn-primary" id="selfCheckinFindBtn" type="button">Find my ticket</button>
+      <div id="selfCheckinResult" style="margin-top:24px;"></div>
+      <p class="panel-sub" style="margin-top:24px;"><a href="#" id="selfCheckinBackLink" style="color:var(--pine);">← Back to registration page</a></p>
     </div>
   </div>
 </div>
@@ -648,6 +675,31 @@ function setupShareBox(){
     new QRCode(qrHolder, { text: link, width: 88, height: 88, colorDark: '#1F3A34', colorLight: '#ffffff' });
   }catch(e){}
 }
+
+function setupCheckinLinkBox(){
+  const base = window.location.href.split('#')[0];
+  const checkinLink = base + '#checkin';
+  const input = document.getElementById('checkinLinkInput');
+  if(input) input.value = checkinLink;
+  const qrHolder = document.getElementById('checkinQr');
+  if(qrHolder){
+    qrHolder.innerHTML = '';
+    try{
+      new QRCode(qrHolder, { text: checkinLink, width: 88, height: 88, colorDark: '#1F3A34', colorLight: '#ffffff' });
+    }catch(e){}
+  }
+}
+
+document.getElementById('copyCheckinLinkBtn').addEventListener('click', async () => {
+  const val = document.getElementById('checkinLinkInput').value;
+  try{
+    await navigator.clipboard.writeText(val);
+    showToast('Check-in link copied');
+  }catch(e){
+    document.getElementById('checkinLinkInput').select();
+    showToast('Select and copy the link above');
+  }
+});
 
 document.getElementById('copyLinkBtn').addEventListener('click', async () => {
   const val = document.getElementById('shareLinkInput').value;
@@ -953,17 +1005,19 @@ async function enterAdmin(){
     return;
   }
   document.getElementById('passOverlay').classList.remove('show');
+  if(window.location.hash === '#checkin') window.location.hash = '';
+  document.getElementById('checkinPageView').style.display = 'none';
   document.getElementById('publicView').style.display = 'none';
   document.getElementById('adminView').style.display = 'block';
   document.querySelector('.share-strip').style.display = 'none';
   populateConfigForm();
+  setupCheckinLinkBox();
   await renderAdmin();
 }
 
 document.getElementById('exitAdminBtn').addEventListener('click', () => {
   document.getElementById('adminView').style.display = 'none';
-  document.getElementById('publicView').style.display = 'block';
-  document.querySelector('.share-strip').style.display = 'flex';
+  route();
 });
 
 document.getElementById('refreshBtn').addEventListener('click', renderAdmin);
@@ -1098,7 +1152,7 @@ async function doCheckin(){
   let match = lastRecords.find(r => r.code.toLowerCase() === query);
   if(!match){
     match = lastRecords.find(r => r.name.toLowerCase().includes(query) ||
-      (r.relatives || []).some(name => name.toLowerCase().includes(query)));
+      (r.relatives || []).some(rel => (typeof rel === 'string' ? rel : rel.name).toLowerCase().includes(query)));
   }
   if(!match){
     feedback.textContent = "No matching registration found.";
@@ -1137,9 +1191,111 @@ document.getElementById('confirmClearBtn').addEventListener('click', async () =>
   }
 });
 
+// SELF CHECK-IN PAGE
+function findRecordByQuery_(records, query){
+  const q = query.trim().toLowerCase();
+  let exact = records.find(r => (r.code || '').toLowerCase() === q);
+  if(exact) return exact;
+  return records.find(r => (r.facebook || '').toLowerCase() === q) || null;
+}
+
+function renderSelfCheckinFound(rec){
+  const resultEl = document.getElementById('selfCheckinResult');
+  const seats = 1 + (rec.relatives ? rec.relatives.length : 0);
+  const guestNames = (rec.relatives || []).map(r => typeof r === 'string' ? r : r.name);
+  const guestLine = guestNames.length
+    ? `<p class="panel-sub" style="margin-top:6px;">With: ${escapeHtml(guestNames.join(', '))}</p>` : '';
+  if(rec.checkedIn){
+    resultEl.innerHTML = `
+      <div class="empty-state" style="background:#E4EEE8; color:var(--pine);">
+        <p class="voice" style="font-size:18px; margin:0 0 6px;">You're already checked in ✓</p>
+        <p style="margin:0; font-size:14px;">${escapeHtml(rec.name)} · ${escapeHtml(rec.code)} · party of ${seats}</p>
+      </div>
+    `;
+    return;
+  }
+  resultEl.innerHTML = `
+    <div class="confirm-box show" style="text-align:center;">
+      <p class="voice" style="font-size:18px; margin:0 0 6px;">${escapeHtml(rec.name)}</p>
+      <p style="margin:0 0 4px;">Entry number: <strong>${escapeHtml(rec.code)}</strong> · party of ${seats}</p>
+      ${guestLine}
+      <button class="btn-primary" id="selfCheckinConfirmBtn" style="margin-top:16px;" type="button">Check myself in</button>
+    </div>
+  `;
+  document.getElementById('selfCheckinConfirmBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('selfCheckinConfirmBtn');
+    btn.disabled = true;
+    btn.textContent = 'Checking in...';
+    try{
+      await apiPostWithRetry('checkin', { code: rec.code, passcode: config.passcode, checkedIn: true }, 3);
+      rec.checkedIn = true;
+      showToast('Checked in — welcome!');
+      renderSelfCheckinFound(rec);
+    }catch(e){
+      console.error('Self check-in failed:', e);
+      btn.disabled = false;
+      btn.textContent = 'Check myself in';
+      showToast("Couldn't check in — try again");
+    }
+  });
+}
+
+document.getElementById('selfCheckinFindBtn').addEventListener('click', async () => {
+  const raw = document.getElementById('selfCheckinInput').value.trim();
+  const resultEl = document.getElementById('selfCheckinResult');
+  if(!raw){
+    resultEl.innerHTML = '<div class="error-text show">Enter your entry number or Facebook/Messenger name.</div>';
+    return;
+  }
+  resultEl.innerHTML = '<p class="panel-sub">Looking that up...</p>';
+  try{
+    const data = await apiGet('list');
+    const records = data.registrations || [];
+    const rec = findRecordByQuery_(records, raw);
+    if(!rec){
+      resultEl.innerHTML = '<div class="empty-state">No matching registration found. Check the entry number or name, or register from the main page.</div>';
+      return;
+    }
+    renderSelfCheckinFound(rec);
+  }catch(e){
+    console.error('Self check-in lookup failed:', e);
+    resultEl.innerHTML = '<div class="error-text show">Something went wrong looking that up. Try again.</div>';
+  }
+});
+document.getElementById('selfCheckinInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') document.getElementById('selfCheckinFindBtn').click();
+});
+document.getElementById('selfCheckinBackLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.location.hash = '';
+});
+
+// ROUTING
+function route(){
+  const hash = window.location.hash;
+  const topShareStrip = document.querySelector('.share-strip');
+  if(hash === '#checkin'){
+    document.getElementById('publicView').style.display = 'none';
+    document.getElementById('adminView').style.display = 'none';
+    document.getElementById('checkinPageView').style.display = 'block';
+    if(topShareStrip) topShareStrip.style.display = 'none';
+    document.getElementById('selfCheckinInput').value = '';
+    document.getElementById('selfCheckinResult').innerHTML = '';
+  }else{
+    document.getElementById('checkinPageView').style.display = 'none';
+    if(document.getElementById('adminView').style.display !== 'block'){
+      document.getElementById('publicView').style.display = 'block';
+      if(topShareStrip) topShareStrip.style.display = 'flex';
+    }
+  }
+}
+window.addEventListener('hashchange', route);
+
 loadConfig();
 setupShareBox();
+setupCheckinLinkBox();
 updatePartyCount();
+route();
 </script>
 </body>
 </html>
