@@ -1228,7 +1228,7 @@ function renderSelfCheckinFound(rec){
     resultEl.innerHTML = `
       <div class="empty-state" style="background:#E4EEE8; color:var(--pine);">
         <p class="voice" style="font-size:18px; margin:0 0 6px;">You're already checked in ✓</p>
-        <p style="margin:0; font-size:14px;">${escapeHtml(rec.name)} · ${escapeHtml(rec.code)} · party of ${seats}</p>
+        <p style="margin:0; font-size:14px;">${escapeHtml(rec.name)} · ${escapeHtml(rec.code)} · headcount of ${seats}</p>
       </div>
     `;
     return;
@@ -1236,7 +1236,7 @@ function renderSelfCheckinFound(rec){
   resultEl.innerHTML = `
     <div class="confirm-box show" style="text-align:center;">
       <p class="voice" style="font-size:18px; margin:0 0 6px;">${escapeHtml(rec.name)}</p>
-      <p style="margin:0 0 4px;">Entry number: <strong>${escapeHtml(rec.code)}</strong> · party of ${seats}</p>
+      <p style="margin:0 0 4px;">Entry number: <strong>${escapeHtml(rec.code)}</strong> · headcount of ${seats}</p>
       ${guestLine}
       <button class="btn-primary" id="selfCheckinConfirmBtn" style="margin-top:16px;" type="button">Check myself in</button>
     </div>
